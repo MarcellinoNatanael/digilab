@@ -1,0 +1,28 @@
+# ============================================================
+#  DigiLab — GitHub Actions: Kirim Email Reminder Otomatis
+# ============================================================
+
+name: Send Webinar Reminder Email
+
+on:
+  schedule:
+    - cron: '0 3 31 5 *'
+    - cron: '0 10 1 6 *'
+  workflow_dispatch:
+
+jobs:
+  send-email:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+      - name: Kirim email reminder ke semua peserta
+        env:
+          SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
+          SUPABASE_KEY: ${{ secrets.SUPABASE_KEY }}
+          RESEND_API_KEY: ${{ secrets.RESEND_API_KEY }}
+        run: node scripts/send-reminder.js
