@@ -26,7 +26,7 @@ const DEFAULT_ARTICLES = [
     readTime: '4',
     image: 'img/Article_2.png',       // ← ganti path gambar artikel 2
     date: '26 Mei 2025',
-    url: '',                          // ← isi dengan 'article-2.html' jika sudah ada
+    url: 'artikel_2.html',                          // ← isi dengan 'article-2.html' jika sudah ada
     excerpt: 'Kalian pernah mengalami stress saat bermain game online, lakukan hal ini agar tidak terus menerus kecanduan dalam bermain game online.'
   },
   {
@@ -36,14 +36,14 @@ const DEFAULT_ARTICLES = [
     readTime: '6',
     image: 'img/Article_3.png',       // ← ganti path gambar artikel 3
     date: '1 Februari 2025',
-    url: '',                          // ← isi dengan 'article-3.html' jika sudah ada
+    url: 'artikel_3.html',                          // ← isi dengan 'article-3.html' jika sudah ada
     excerpt: 'Digital detox tidak harus ekstrem. Ada cara lebih realistis dan terbukti ilmiah untuk mengembalikan keseimbangan antara dunia digital dan kehidupan nyata.'
   }
 ];
 
 /* Naikkan VERSION setiap kali kamu mengubah DEFAULT_ARTICLES
    agar localStorage diperbarui otomatis di browser pengunjung */
-const ARTICLES_VERSION = '3';
+const ARTICLES_VERSION = '4';
 
 /* ── Data helpers ─────────────────────────────────────────── */
 function artikelGetAll() {

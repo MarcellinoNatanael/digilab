@@ -205,16 +205,11 @@ function selectAnswer(val) {
     btn.classList.toggle('selected', isSelected);
     btn.setAttribute('aria-pressed', isSelected);
   });
-  setTimeout(() => {
-    if (state.current < 19) {
-      state.current++;
-      render();
-      document.getElementById('stContainer')?.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
-    } else {
-      const next = document.getElementById('stNextBtn');
-      if (next) { next.textContent = '🎯 Lihat Hasil'; next.onclick = showResult; }
-    }
-  }, 380);
+  // Update tombol di soal terakhir agar berubah jadi "Lihat Hasil"
+  if (state.current === 19) {
+    const next = document.getElementById('stNextBtn');
+    if (next) { next.textContent = '🎯 Lihat Hasil'; next.onclick = showResult; }
+  }
 }
 
 function stPrev() {
