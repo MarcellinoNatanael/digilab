@@ -1,0 +1,145 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>DigiLab — Feedback Webinar</title>
+  <link rel="stylesheet" href="css/style.css"/>
+  <style>
+    .scale-btn {
+      width: 2.4rem; height: 2.4rem;
+      display: inline-flex; align-items: center; justify-content: center;
+      border: 2px solid var(--border); border-radius: 50%;
+      font-weight: 700; font-size: 0.9rem; cursor: pointer;
+      transition: all .15s; color: var(--text-2);
+      user-select: none; flex-shrink: 0;
+    }
+    .scale-btn:hover  { border-color: var(--primary); color: var(--primary); }
+    .scale-btn.active { background: var(--primary); border-color: var(--primary); color: #fff; }
+
+    .fb-state-box {
+      display: none; text-align: center; padding: 3.5rem 1.5rem;
+      background: var(--bg-1); border-radius: 1rem;
+      margin: 2rem auto; max-width: 480px;
+      border: 1px solid var(--border);
+    }
+    .fb-state-box.show { display: block; }
+    .fb-state-icon { font-size: 3.5rem; margin-bottom: 1rem; }
+  </style>
+</head>
+<body>
+
+<nav class="navbar">
+  <div class="nav-container">
+    <a href="index.html" class="nav-logo">
+      <img src="img/DigiLab_Logo.png" style="height:50px;width:auto;">
+    </a>
+    <button class="nav-toggle" id="navToggle">☰</button>
+    <ul class="nav-menu" id="navMenu">
+      <li><a href="index.html">Beranda</a></li>
+      <li><a href="edukasi.html">Edukasi</a></li>
+      <li><a href="self-test.html">Self-Test</a></li>
+      <li><a href="tips.html">Tips</a></li>
+      <li><a href="artikel.html">Artikel</a></li>
+      <li><a href="daftar.html" class="nav-cta">Daftar Webinar</a></li>
+    </ul>
+  </div>
+</nav>
+
+<section class="page-hero" style="padding:3rem 0 2.5rem">
+  <div class="container">
+    <div class="label">Feedback Webinar</div>
+    <h1>Bagikan Pendapatmu 💬</h1>
+    <p style="max-width:560px">Bantu kami meningkatkan kualitas webinar dengan mengisi feedback ini. Hanya butuh beberapa menit!</p>
+    <div style="display:flex;gap:0.75rem;margin-top:1rem;flex-wrap:wrap">
+      <span class="tag tag-success">✅ Email Opsional</span>
+      <span class="tag tag-gray">⏱ ~3 Menit</span>
+      <span class="tag tag-warning">📋 Break the Loop</span>
+    </div>
+  </div>
+</section>
+
+<section class="section" style="padding-top:0">
+  <div class="container" style="max-width:720px">
+
+    <!-- Sudah submit -->
+    <div class="fb-state-box" id="fbAlreadySubmitted">
+      <div class="fb-state-icon">✅</div>
+      <h3>Kamu sudah mengisi feedback!</h3>
+      <p style="color:var(--text-3);margin:0.5rem 0 1.5rem">
+        Terima kasih sudah meluangkan waktu. Masukan kamu sangat berarti untuk kami!
+      </p>
+      <a href="index.html" class="btn btn-primary">Kembali ke Beranda</a>
+    </div>
+
+    <!-- Sukses submit -->
+    <div class="fb-state-box" id="fbSuccess">
+      <div class="fb-state-icon">🎉</div>
+      <h3>Feedback berhasil dikirim!</h3>
+      <p style="color:var(--text-3);margin:0.5rem 0 1.5rem">
+        Terima kasih atas masukan kamu! Kami akan terus berusaha memberikan konten yang lebih baik.
+      </p>
+      <a href="index.html" class="btn btn-primary">Kembali ke Beranda</a>
+    </div>
+
+    <!-- Form section -->
+    <div id="fbFormSection">
+
+      <!-- Identitas -->
+      <div class="reg-card fade-in" style="margin-bottom:1.25rem">
+        <h3 style="margin-bottom:1rem">👤 Identitas</h3>
+        <div class="form-group">
+          <label class="form-label">Nama *</label>
+          <input class="form-input" id="fbName" placeholder="Nama kamu..."/>
+        </div>
+        <div class="form-group" style="margin-bottom:0">
+          <label class="form-label">
+            Email
+            <span style="color:var(--text-4);font-size:0.75rem;font-weight:400">(opsional)</span>
+          </label>
+          <input class="form-input" id="fbEmail" type="email" placeholder="nama@gmail.com"/>
+          <p style="font-size:0.75rem;color:var(--text-4);margin:0.4rem 0 0">
+            Email digunakan untuk mencegah duplikasi. Tidak akan dibagikan ke pihak lain.
+          </p>
+        </div>
+      </div>
+
+      <!-- Pertanyaan (dinamis dari DB) -->
+      <div id="fbQuestions">
+        <div class="reg-card" style="padding:2rem;text-align:center;color:var(--text-3)">
+          ⏳ Memuat pertanyaan...
+        </div>
+      </div>
+
+      <!-- Error -->
+      <div id="fbError" class="reg-error" style="margin-bottom:1rem">
+        ⚠️ <span id="fbErrorMsg">Terjadi kesalahan.</span>
+      </div>
+
+      <!-- Submit -->
+      <div class="reg-card fade-in" style="margin-top:0.25rem">
+        <button class="btn btn-primary" id="fbSubmitBtn"
+          style="width:100%;justify-content:center;font-size:1rem"
+          onclick="submitFeedback()">
+          Kirim Feedback 🚀
+        </button>
+        <p style="font-size:0.75rem;color:var(--text-4);text-align:center;margin-top:0.75rem">
+          Data kamu hanya digunakan untuk evaluasi internal webinar DigiLab.
+        </p>
+      </div>
+
+    </div>
+  </div>
+</section>
+
+<footer class="footer">
+  <div class="container">
+    <div class="footer-bottom">
+      <span>© 2025 DigiLab — Your Digital Wellness Laboratory</span>
+    </div>
+  </div>
+</footer>
+
+<script src="js/feedback.js"></script>
+</body>
+</html>

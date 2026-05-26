@@ -315,6 +315,7 @@ function initCountdown() {
   );
 
   updateGmeetButton();
+  updateFeedbackLink();
   checkRegistrationDeadline();
 
   function tick() {
@@ -325,6 +326,7 @@ function initCountdown() {
       set('cdLabel', 'Webinar sedang berlangsung! 🟢');
       ['cdDays', 'cdHours', 'cdMinutes', 'cdSeconds'].forEach(id => set(id, '00'));
       updateGmeetButton();
+      updateFeedbackLink();
       return;
     }
 
@@ -474,6 +476,26 @@ function toggleFaq(el) {
   if (!isOpen) item.classList.add('open');
 }
 
+function updateFeedbackLink() {
+  const open = document.getElementById('feedbackOpen');
+  const soon = document.getElementById('feedbackSoon');
+  if (!open || !soon) return;
+
+  const now            = new Date();
+  const feedbackBuka   = new Date(EVENT_CONFIG.tanggal.getTime() + 60 * 60 * 1000); // +1 jam
+  const webinarMulai   = now >= EVENT_CONFIG.tanggal;
+
+  if (now >= feedbackBuka) {
+    open.style.display = 'block';
+    soon.style.display = 'none';
+  } else if (webinarMulai) {
+    open.style.display = 'none';
+    soon.style.display = 'block';
+  } else {
+    open.style.display = 'none';
+    soon.style.display = 'none';
+  }
+}
 
 /* ── Init ──────────────────────────────────────────────── */
 document.addEventListener('DOMContentLoaded', async () => {
