@@ -33,8 +33,9 @@ let state = {
   adminId      : null,
 };
 
-let supabaseClient   = null;
-let presenceChannel  = null;
+let supabaseClient  = null;
+let presenceChannel = null;
+let changesChannel  = null;
 
 /* ── Avatar helpers ─────────────────────────────────────── */
 function getAvatarColor(str) {
@@ -129,27 +130,25 @@ const adminDB = {
 };
 
 /* ══════════════════════════════════════════════════════════
-   REALTIME PRESENCE — siapa saja yang sedang online
+   REALTIME — Presence (siapa online) + Sync perubahan DB
    ══════════════════════════════════════════════════════════ */
 function initRealtime() {
   try {
     const { createClient } = window.supabase;
     supabaseClient = createClient(ADMIN_CFG.supabaseUrl, ADMIN_CFG.supabaseKey);
 
+    // ── 1. Presence: siapa yang sedang online ──────────────
     presenceChannel = supabaseClient.channel('admin-presence-room');
-
     presenceChannel
       .on('presence', { event: 'sync' }, () => {
-        const presenceState = presenceChannel.presenceState();
-        renderOnlineUsers(presenceState);
+        renderOnlineUsers(presenceChannel.presenceState());
       })
       .on('presence', { event: 'join' }, () => {
-        const presenceState = presenceChannel.presenceState();
-        renderOnlineUsers(presenceState);
+        renderOnlineUsers(presenceChannel.presenceState());
+        showToast('👋 Admin baru bergabung!');
       })
       .on('presence', { event: 'leave' }, () => {
-        const presenceState = presenceChannel.presenceState();
-        renderOnlineUsers(presenceState);
+        renderOnlineUsers(presenceChannel.presenceState());
       })
       .subscribe(async (status) => {
         if (status === 'SUBSCRIBED') {
@@ -162,6 +161,26 @@ function initRealtime() {
           });
         }
       });
+
+    // ── 2. Postgres Changes: sync perubahan pertanyaan ─────
+    // Pastikan sudah jalankan SQL:
+    // ALTER PUBLICATION supabase_realtime ADD TABLE feedback_questions;
+    changesChannel = supabaseClient
+      .channel('feedback-questions-changes')
+      .on(
+        'postgres_changes',
+        { event: '*', schema: 'public', table: 'feedback_questions' },
+        (payload) => {
+          const actor = payload?.new?.updated_by || payload?.old?.updated_by || '';
+          const isMe  = actor === state.adminEmail;
+          if (!isMe) {
+            showToast('🔄 Pertanyaan diperbarui oleh admin lain');
+          }
+          loadQuestions();
+        }
+      )
+      .subscribe();
+
   } catch (err) {
     console.warn('Realtime tidak tersedia:', err);
   }
@@ -171,9 +190,11 @@ function cleanupRealtime() {
   try {
     presenceChannel?.untrack();
     presenceChannel?.unsubscribe();
+    changesChannel?.unsubscribe();
     supabaseClient?.removeAllChannels();
   } catch (_) {}
   presenceChannel = null;
+  changesChannel  = null;
   supabaseClient  = null;
 }
 
@@ -182,8 +203,7 @@ function renderOnlineUsers(presenceState) {
   const countEl   = document.getElementById('onlineCount');
   if (!container) return;
 
-  // Kumpulkan semua user yang online (flatten presence state)
-  const users = Object.values(presenceState).flat();
+  const users  = Object.values(presenceState).flat();
   const unique = [];
   const seen   = new Set();
   users.forEach(u => {
@@ -207,11 +227,33 @@ function renderOnlineUsers(presenceState) {
   }).join('');
 }
 
+/* ── Toast notifikasi ───────────────────────────────────── */
+function showToast(msg) {
+  let toast = document.getElementById('adminToast');
+  if (!toast) {
+    toast = document.createElement('div');
+    toast.id = 'adminToast';
+    toast.style.cssText = `
+      position:fixed;bottom:1.5rem;right:1.5rem;
+      background:#1e293b;color:#fff;
+      padding:0.65rem 1.1rem;border-radius:0.6rem;
+      font-size:0.85rem;font-weight:500;
+      box-shadow:0 4px 20px rgba(0,0,0,.25);
+      z-index:9999;opacity:0;transition:opacity .25s;
+      pointer-events:none;`;
+    document.body.appendChild(toast);
+  }
+  toast.textContent = msg;
+  toast.style.opacity = '1';
+  clearTimeout(toast._t);
+  toast._t = setTimeout(() => { toast.style.opacity = '0'; }, 3000);
+}
+
 /* ══════════════════════════════════════════════════════════
-   AUTH
+   AUTH — localStorage (bukan sessionStorage)
    ══════════════════════════════════════════════════════════ */
 function isLoggedIn() {
-  return !!sessionStorage.getItem(ADMIN_CFG.sessionKey);
+  return !!localStorage.getItem(ADMIN_CFG.sessionKey);
 }
 
 async function login() {
@@ -225,7 +267,6 @@ async function login() {
     if (errEl) { errEl.textContent = '❌ Email dan password wajib diisi!'; errEl.style.display = 'block'; }
     return;
   }
-
   if (btn) { btn.disabled = true; btn.textContent = 'Memverifikasi...'; }
 
   try {
@@ -234,7 +275,7 @@ async function login() {
       if (errEl) { errEl.textContent = '❌ Email atau password salah!'; errEl.style.display = 'block'; }
       return;
     }
-    sessionStorage.setItem(ADMIN_CFG.sessionKey, JSON.stringify({ id: admin.id, name: admin.name, email: admin.email }));
+    localStorage.setItem(ADMIN_CFG.sessionKey, JSON.stringify({ id: admin.id, name: admin.name, email: admin.email }));
     state.adminName  = admin.name  || admin.email;
     state.adminEmail = admin.email || '';
     state.adminId    = admin.id;
@@ -270,7 +311,6 @@ async function register() {
   if (pw !== pw2) {
     if (errEl) { errEl.textContent = '❌ Konfirmasi password tidak cocok!'; errEl.style.display = 'block'; } return;
   }
-
   if (btn) { btn.disabled = true; btn.textContent = 'Mendaftar...'; }
 
   try {
@@ -293,7 +333,7 @@ async function register() {
 
 function logout() {
   cleanupRealtime();
-  sessionStorage.removeItem(ADMIN_CFG.sessionKey);
+  localStorage.removeItem(ADMIN_CFG.sessionKey);
   document.getElementById('loginScreen').style.display = 'flex';
   document.getElementById('adminPanel').style.display  = 'none';
   showLoginTab();
@@ -318,18 +358,17 @@ function showRegisterTab() {
 
 async function showPanel() {
   try {
-    const s = JSON.parse(sessionStorage.getItem(ADMIN_CFG.sessionKey));
+    const s = JSON.parse(localStorage.getItem(ADMIN_CFG.sessionKey));
     state.adminName  = s?.name  || s?.email || 'Admin';
     state.adminEmail = s?.email || '';
     state.adminId    = s?.id    || null;
   } catch { state.adminName = 'Admin'; }
 
-  // Render current user di navbar
   const myAvatarEl = document.getElementById('myAvatar');
   const myNameEl   = document.getElementById('myName');
   const color      = getAvatarColor(state.adminName);
   if (myAvatarEl) {
-    myAvatarEl.textContent   = getInitials(state.adminName);
+    myAvatarEl.textContent      = getInitials(state.adminName);
     myAvatarEl.style.background = color;
   }
   if (myNameEl) myNameEl.textContent = state.adminName;
@@ -337,9 +376,7 @@ async function showPanel() {
   document.getElementById('loginScreen').style.display = 'none';
   document.getElementById('adminPanel').style.display  = 'block';
 
-  // Init realtime presence
   initRealtime();
-
   await loadQuestions();
 }
 
@@ -398,7 +435,6 @@ function renderQuestions() {
            ${q.scale_label_min ? ` · "${q.scale_label_min}"` : ''}
            ${q.scale_label_max ? ` → "${q.scale_label_max}"` : ''}
          </div>` : '';
-
     return `
       <div class="question-card">
         <div style="display:flex;align-items:flex-start;gap:1rem">
@@ -448,7 +484,6 @@ async function deleteQuestion(id) {
 function openModal(id = null) {
   state.editingId = id;
   const title = document.getElementById('modalTitle');
-
   if (id !== null) {
     const q = state.questions.find(q => q.id === id);
     if (!q) return;
@@ -652,10 +687,10 @@ function toggleDetail(id, btn) {
 document.addEventListener('DOMContentLoaded', () => {
   if (isLoggedIn()) {
     try {
-      const s = JSON.parse(sessionStorage.getItem(ADMIN_CFG.sessionKey));
-      state.adminName = s?.name || s?.email || 'Admin';
+      const s = JSON.parse(localStorage.getItem(ADMIN_CFG.sessionKey));
+      state.adminName  = s?.name  || s?.email || 'Admin';
       state.adminEmail = s?.email || '';
-      state.adminId = s?.id || null;
+      state.adminId    = s?.id    || null;
     } catch {}
     showPanel();
   } else {
