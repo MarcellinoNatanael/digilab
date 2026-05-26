@@ -42,7 +42,7 @@ const db = {
       { headers: db.headers() }
     );
     if (!res.ok) throw new Error('Gagal mengambil data peserta');
-    return await res.json(); // array of rows
+    return await res.json();
   },
 
   // Hitung total peserta
@@ -57,12 +57,21 @@ const db = {
         }
       }
     );
-    // Supabase kirim total di header Content-Range: 0-0/TOTAL
     const range = res.headers.get('Content-Range') || '0-0/0';
     return parseInt(range.split('/')[1]) || 0;
   },
 
-  // Cek apakah NIM sudah terdaftar
+  // Cek apakah email sudah terdaftar di database
+  async emailExists(email) {
+    const res = await fetch(
+      EVENT_CONFIG.supabaseUrl + '/rest/v1/peserta?email=eq.' + encodeURIComponent(email) + '&select=id',
+      { headers: db.headers() }
+    );
+    const data = await res.json();
+    return Array.isArray(data) && data.length > 0;
+  },
+
+  // Cek apakah NIM sudah terdaftar (hanya jika NIM diisi)
   async nimExists(nim) {
     const res = await fetch(
       EVENT_CONFIG.supabaseUrl + '/rest/v1/peserta?nim=eq.' + encodeURIComponent(nim) + '&select=id',
@@ -73,19 +82,27 @@ const db = {
   },
 
   // Insert peserta baru
-  async insert(nama, nim, email) {
+  // ⚠️ Pastikan kolom `status` dan `alasan` sudah dibuat di tabel Supabase kamu:
+  //    ALTER TABLE peserta ADD COLUMN status TEXT;
+  //    ALTER TABLE peserta ADD COLUMN alasan TEXT;
+  async insert(nama, nim, email, status, alasan) {
     const res = await fetch(
       EVENT_CONFIG.supabaseUrl + '/rest/v1/peserta',
       {
         method : 'POST',
         headers: db.headers(),
-        body   : JSON.stringify({ nama, nim, email }),
+        body   : JSON.stringify({
+          nama,
+          nim   : nim    || null,
+          email,
+          status: status || null,
+          alasan: alasan || null,
+        }),
       }
     );
 
     if (res.status === 409) {
-      // 409 Conflict = UNIQUE violation (NIM sudah ada)
-      throw new Error('NIM ' + nim + ' sudah terdaftar!');
+      throw new Error('Email ' + email + ' sudah terdaftar!');
     }
     if (!res.ok) {
       const err = await res.json().catch(() => ({}));
@@ -100,9 +117,11 @@ const db = {
    FORM PENDAFTARAN
    ══════════════════════════════════════════════════════════ */
 async function submitRegistrasi() {
-  const nama  = (document.getElementById('regNama')?.value  || '').trim();
-  const nim   = (document.getElementById('regNIM')?.value   || '').trim();
-  const email = (document.getElementById('regEmail')?.value || '').trim();
+  const nama   = (document.getElementById('regNama')?.value   || '').trim();
+  const nim    = (document.getElementById('regNIM')?.value    || '').trim();
+  const email  = (document.getElementById('regEmail')?.value  || '').trim();
+  const status = (document.getElementById('regStatus')?.value || '').trim();
+  const alasan = (document.getElementById('regAlasan')?.value || '').trim();
 
   const errEl  = document.getElementById('regError');
   const errMsg = document.getElementById('regErrorMsg');
@@ -123,12 +142,14 @@ async function submitRegistrasi() {
   }
 
   // ── Validasi sisi klien ──────────────────────────────────
-  if (!nama || !nim || !email)        return showError('Semua field wajib diisi!');
-  if (!email.includes('@'))           return showError('Format email tidak valid!');
+  if (!nama)                return showError('Nama lengkap wajib diisi!');
+  if (!email)               return showError('Email wajib diisi!');
+  if (!email.includes('@')) return showError('Format email tidak valid!');
+  if (!status)              return showError('Pilih status kamu terlebih dahulu!');
   if (new Date() > EVENT_CONFIG.batasDaftar) return showError('Batas pendaftaran sudah berakhir!');
 
   // ── Loading state ────────────────────────────────────────
-  if (regBtn) { regBtn.disabled = true; regBtn.textContent = 'Mendaftarkan...'; }
+  if (regBtn) { regBtn.disabled = true; regBtn.textContent = 'Mendaftarkan...'; regBtn.style.opacity = '0.7'; }
 
   try {
     // Cek kuota
@@ -137,21 +158,37 @@ async function submitRegistrasi() {
       return showError('Maaf, kuota sudah penuh!');
     }
 
-    // Insert ke Supabase (duplikat NIM ditangani oleh UNIQUE constraint)
-    await db.insert(nama, nim, email);
+    // Cek duplikat email
+    const emailSudahAda = await db.emailExists(email);
+    if (emailSudahAda) {
+      return showError('Email ini sudah terdaftar! Gunakan email lain.');
+    }
 
-    // Simpan NIM di localStorage supaya tombol GMeet bisa aktif di browser ini
-    localStorage.setItem('btl_my_nim', nim);
+    // Cek duplikat NIM (hanya jika NIM diisi)
+    if (nim) {
+      const nimSudahAda = await db.nimExists(nim);
+      if (nimSudahAda) {
+        return showError('NIM ' + nim + ' sudah terdaftar!');
+      }
+    }
+
+    // Insert ke Supabase
+    await db.insert(nama, nim, email, status, alasan);
+
+    // Simpan email di localStorage sebagai tanda sudah terdaftar
+    localStorage.setItem('btl_registered_email', email);
 
     // Tampilkan sukses
     sucEl?.classList.add('show');
-    ['regNama', 'regNIM', 'regEmail'].forEach(id => {
+    ['regNama', 'regNIM', 'regEmail', 'regAlasan'].forEach(id => {
       const el = document.getElementById(id);
       if (el) el.value = '';
     });
+    const statusEl = document.getElementById('regStatus');
+    if (statusEl) statusEl.value = '';
 
     await regRenderList();
-    updateGmeetButton();
+    await updateGmeetButton();
 
   } catch (err) {
     showError(err.message || 'Terjadi kesalahan. Coba lagi.');
@@ -186,18 +223,24 @@ async function regRenderList() {
       return;
     }
 
+    const statusIcon = { Mahasiswa: '🎓', Siswa: '📚', Pekerja: '💼' };
+
     listEl.innerHTML = regs.slice(0, 20).map(r => {
       const initials = r.nama.split(' ').slice(0, 2).map(w => w[0] || '').join('').toUpperCase();
       const date     = new Date(r.created_at);
       const timeStr  = date.toLocaleDateString('id-ID', { day: 'numeric', month: 'short' })
                      + ', '
                      + date.toLocaleTimeString('id-ID', { hour: '2-digit', minute: '2-digit' });
+      const icon     = statusIcon[r.status] || '👤';
+      const subInfo  = r.nim
+        ? 'NIM: ' + r.nim + (r.status ? ' · ' + r.status : '')
+        : (r.status || '');
       return `
         <div class="participant-item">
           <div class="p-avatar">${initials}</div>
-          <div>
-            <div class="p-name">${r.nama}</div>
-            <div class="p-nim">NIM: ${r.nim}</div>
+          <div style="flex:1;min-width:0">
+            <div class="p-name">${icon} ${r.nama}</div>
+            <div class="p-nim">${subInfo}</div>
           </div>
           <div class="p-time">${timeStr}</div>
         </div>`;
@@ -294,30 +337,68 @@ function initCountdown() {
   tick();
 }
 
-function updateGmeetButton() {
+/* ─────────────────────────────────────────────────────────
+   updateGmeetButton — verifikasi ke database Supabase
+   agar link HANYA bisa diakses peserta yang benar-benar
+   terdaftar di database, bukan sekadar manipulasi localStorage
+   ───────────────────────────────────────────────────────── */
+async function updateGmeetButton() {
   const btn = document.getElementById('gmeetBtn');
   if (!btn) return;
 
-  const now          = new Date();
-  const eventStarted = now >= EVENT_CONFIG.tanggal;
-  const sudahDaftar  = !!localStorage.getItem('btl_my_nim');
+  const now              = new Date();
+  const eventStarted     = now >= EVENT_CONFIG.tanggal;
+  const registeredEmail  = localStorage.getItem('btl_registered_email');
 
-  if (!eventStarted && !sudahDaftar) {
-    btn.className = 'gmeet-btn locked'; btn.disabled = true;
-    btn.innerHTML = '🔒 Link Google Meet (Aktif saat acara dimulai)';
-    showGmeetStatus('', '');
-  } else if (!eventStarted && sudahDaftar) {
-    btn.className = 'gmeet-btn locked'; btn.disabled = true;
-    btn.innerHTML = '🔒 Kamu sudah terdaftar — tunggu hingga acara dimulai';
-    showGmeetStatus('info', '✅ Pendaftaran berhasil. Link aktif tepat saat acara dimulai.');
-  } else if (eventStarted && !sudahDaftar) {
+  // ── Acara belum mulai ─────────────────────────────────
+  if (!eventStarted) {
+    if (!registeredEmail) {
+      btn.className = 'gmeet-btn locked'; btn.disabled = true;
+      btn.innerHTML = '🔒 Link Google Meet (Aktif saat acara dimulai)';
+      showGmeetStatus('', '');
+    } else {
+      btn.className = 'gmeet-btn locked'; btn.disabled = true;
+      btn.innerHTML = '🔒 Kamu sudah terdaftar — tunggu hingga acara dimulai';
+      showGmeetStatus('info', '✅ Pendaftaran berhasil. Link aktif tepat pukul 19.00 WIB, 1 Juni 2026.');
+    }
+    return;
+  }
+
+  // ── Acara sudah mulai ─────────────────────────────────
+  if (!registeredEmail) {
+    // Tidak ada email di localStorage → pasti belum daftar
     btn.className = 'gmeet-btn locked'; btn.disabled = true;
     btn.innerHTML = '🔒 Acara sudah dimulai — kamu belum mendaftar';
     showGmeetStatus('error', '❌ Kamu belum mendaftar. Link hanya tersedia bagi peserta terdaftar.');
-  } else {
-    btn.className = 'gmeet-btn unlocked'; btn.disabled = false;
-    btn.innerHTML = '🟢 Bergabung Google Meet — Klik Sekarang!';
-    showGmeetStatus('info', '✅ Selamat! Kamu sudah terdaftar dan acara sudah dimulai.');
+    return;
+  }
+
+  // Ada email di localStorage → verifikasi ke database
+  btn.className = 'gmeet-btn locked'; btn.disabled = true;
+  btn.innerHTML = '⏳ Memverifikasi pendaftaran...';
+  showGmeetStatus('', '');
+
+  try {
+    const verified = await db.emailExists(registeredEmail);
+
+    if (verified) {
+      // ✅ Terdaftar di database → buka link
+      btn.className = 'gmeet-btn unlocked'; btn.disabled = false;
+      btn.innerHTML = '🟢 Bergabung Google Meet — Klik Sekarang!';
+      showGmeetStatus('info', '✅ Selamat! Pendaftaran terverifikasi. Acara sedang berlangsung.');
+    } else {
+      // ❌ Email ada di localStorage tapi tidak ada di DB
+      // (mungkin data dihapus admin atau localStorage dimanipulasi)
+      localStorage.removeItem('btl_registered_email');
+      btn.className = 'gmeet-btn locked'; btn.disabled = true;
+      btn.innerHTML = '🔒 Pendaftaran tidak ditemukan di database';
+      showGmeetStatus('error', '❌ Data pendaftaranmu tidak ditemukan. Silakan daftar ulang atau hubungi panitia.');
+    }
+  } catch (err) {
+    // Gagal koneksi ke Supabase
+    btn.className = 'gmeet-btn locked'; btn.disabled = true;
+    btn.innerHTML = '⚠️ Gagal memverifikasi — coba refresh';
+    showGmeetStatus('error', '⚠️ Koneksi ke server gagal. Refresh halaman dan coba lagi.');
   }
 }
 

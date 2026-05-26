@@ -88,7 +88,7 @@
             <div class="event-icon">📅</div>
             <div>
               <div class="e-label">Tanggal</div>
-              <div class="e-val">Sabtu, 01 juni 2026</div>
+              <div class="e-val">Sabtu, 01 Juni 2026</div>
             </div>
           </div>
 
@@ -158,7 +158,7 @@
         <div class="reg-card fade-in" style="margin-bottom:1.5rem">
           <h3>Daftar Sekarang</h3>
           <p style="font-size:0.875rem;color:var(--text-3);margin:0.4rem 0 1.25rem">
-            Isi data di bawah. Setelah daftar dan acara dimulai, link Google Meet akan dapat diakses.
+            Isi data di bawah. Setelah daftar dan acara dimulai, link Google Meet akan dapat diakses oleh peserta terdaftar.
           </p>
 
           <div class="reg-full-notice" id="regFullNotice">
@@ -171,25 +171,60 @@
           </div>
 
           <div id="regSuccess" class="reg-success">
-            ✅ Berhasil mendaftar! Nama kamu sudah tercatat. Link Google Meet aktif saat acara dimulai.
+            ✅ Berhasil mendaftar! Nama kamu sudah tercatat. Link Google Meet aktif saat acara dimulai pukul 19.00 WIB.
           </div>
           <div id="regError" class="reg-error">
             ⚠️ <span id="regErrorMsg">Terjadi kesalahan.</span>
           </div>
 
           <div id="regFormWrapper">
+
+            <!-- Nama Lengkap -->
             <div class="form-group">
               <label class="form-label">Nama Lengkap *</label>
               <input class="form-input" id="regNama" placeholder="Masukkan nama lengkap kamu..."/>
             </div>
+
+            <!-- Status -->
             <div class="form-group">
-              <label class="form-label">NIM *</label>
+              <label class="form-label">Status *</label>
+              <select class="form-input" id="regStatus">
+                <option value="" disabled selected>— Pilih status kamu —</option>
+                <option value="Siswa">📚 Siswa</option>
+                <option value="Mahasiswa">🎓 Mahasiswa</option>
+                <option value="Pekerja">💼 Pekerja</option>
+              </select>
+            </div>
+
+            <!-- NIM (opsional, muncul hanya saat Mahasiswa dipilih) -->
+            <div class="form-group" id="nimGroup" style="display:none">
+              <label class="form-label">
+                NIM
+                <span style="color:var(--text-4);font-size:0.75rem;font-weight:400">(opsional, khusus mahasiswa)</span>
+              </label>
               <input class="form-input" id="regNIM" placeholder="Contoh: 123456789"/>
             </div>
+
+            <!-- Email -->
             <div class="form-group">
-              <label class="form-label">Email UBM *</label>
-              <input class="form-input" id="regEmail" type="email" placeholder="nama@student.ubm.ac.id"/>
+              <label class="form-label">Email *</label>
+              <input class="form-input" id="regEmail" type="email" placeholder="nama@gmail.com"/>
             </div>
+
+            <!-- Alasan Join -->
+            <div class="form-group">
+              <label class="form-label">
+                Alasan Ikut Webinar
+                <span style="color:var(--text-4);font-size:0.75rem;font-weight:400">(opsional)</span>
+              </label>
+              <textarea
+                class="form-input"
+                id="regAlasan"
+                rows="3"
+                placeholder="Contoh: Saya ingin belajar lebih tentang gaming addiction karena..."
+                style="resize:vertical;min-height:80px;font-family:inherit;font-size:inherit"></textarea>
+            </div>
+
             <button
               class="btn btn-primary"
               id="regBtn"
@@ -247,7 +282,7 @@
                 <span class="arrow">▼</span>
               </div>
               <div class="faq-a">
-                Setelah kamu mendaftar, tombol link Google Meet di halaman ini akan aktif <strong>tepat saat waktu acara dimulai (01 Juni 2026, 19.00 WIB)</strong>. Kamu hanya perlu kembali ke halaman ini dan klik tombol tersebut. Pastikan kamu sudah terdaftar agar tombol bisa diakses.
+                Setelah kamu mendaftar, tombol link Google Meet di halaman ini akan aktif <strong>tepat saat waktu acara dimulai (01 Juni 2026, 19.00 WIB)</strong>. Kamu hanya perlu kembali ke halaman ini dan klik tombol tersebut. Pastikan kamu sudah terdaftar agar tombol bisa diakses — sistem kami memverifikasi pendaftaran langsung ke database.
               </div>
             </div>
 
@@ -257,7 +292,7 @@
                 <span class="arrow">▼</span>
               </div>
               <div class="faq-a">
-                Tidak! Webinar ini terbuka untuk semua program studi yang ada di UBM khususnya mereka yang tertarik dengan topik digital wellness dan gaming addiction.
+                Tidak! Webinar ini terbuka untuk semua kalangan — siswa, mahasiswa dari program studi apapun, maupun pekerja yang tertarik dengan topik digital wellness dan gaming addiction.
               </div>
             </div>
 
@@ -267,7 +302,7 @@
                 <span class="arrow">▼</span>
               </div>
               <div class="faq-a">
-                Cukup siapkan: (1) koneksi internet yang stabil, (2) perangkat dengan browser (untuk mengikuti live quiz di website ini saat webinar), dan (3) aplikasi atau akses Google Meet. Tidak perlu instalasi apapun semuanya berbasis web.
+                Cukup siapkan: (1) koneksi internet yang stabil, (2) perangkat dengan browser (untuk mengikuti live quiz di website ini saat webinar), dan (3) aplikasi atau akses Google Meet. Tidak perlu instalasi apapun — semuanya berbasis web.
               </div>
             </div>
 
@@ -320,6 +355,17 @@
     </div>
   </div>
 </footer>
+
+<!-- Script: tampilkan/sembunyikan NIM berdasarkan status yang dipilih -->
+<script>
+  document.getElementById('regStatus').addEventListener('change', function () {
+    const nimGroup = document.getElementById('nimGroup');
+    nimGroup.style.display = this.value === 'Mahasiswa' ? 'block' : 'none';
+    if (this.value !== 'Mahasiswa') {
+      document.getElementById('regNIM').value = '';
+    }
+  });
+</script>
 
 <script src="js/daftar.js"></script>
 </body>
