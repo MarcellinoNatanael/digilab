@@ -12,8 +12,8 @@ const EVENT_CONFIG = {
   gmeetLink    : 'https://meet.google.com/zdd-xoiv-zcp',
   batasDaftar  : new Date('2026-05-31T23:59:00'),
   kuota        : 50,
-  judul        : 'Break the Loop: Cegah Kecanduan dalam Permainan Daring',
-  deskripsi    : 'Webinar edukasi interaktif tentang bahaya gaming addiction, cara mengenali tanda-tandanya, dan strategi gaming yang sehat berbasis pendekatan psikologi digital.',
+  judul        : 'Break the Loop: Cegah Kecanduan dalam Permainan Online',
+  deskripsi    : 'Webinar edukasi yang membahas tentang bahaya gaming addiction, cara mengenali tanda-tandanya, dan strategi gaming yang sehat berbasis pendekatan psikologi digital.',
   pic          : 'Marcellino Natanael - Mahasiswa SI, Universitas Bunda Mulia',
   jenisKegiatan: 'Webinar Online Gratis',
   durasi       : '60 Menit',
@@ -178,8 +178,9 @@ async function submitRegistrasi() {
     // Simpan email di localStorage sebagai tanda sudah terdaftar
     localStorage.setItem('btl_registered_email', email);
 
-    // Tampilkan sukses
+    // Tampilkan sukses & sembunyikan otomatis setelah 5 detik
     sucEl?.classList.add('show');
+    setTimeout(() => sucEl?.classList.remove('show'), 5000);
     ['regNama', 'regNIM', 'regEmail', 'regAlasan'].forEach(id => {
       const el = document.getElementById(id);
       if (el) el.value = '';
