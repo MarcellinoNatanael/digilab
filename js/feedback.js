@@ -60,19 +60,12 @@ const fbDB = {
 /* ── Scale selector ─────────────────────────────────────── */
 function selectScale(btn) {
   const qid = btn.dataset.qid;
-  console.log('klik qid:', qid, 'val:', btn.dataset.val);
-
   document.querySelectorAll(`.scale-btn[data-qid="${qid}"]`).forEach(b => {
     b.classList.remove('active');
-    console.log('remove active dari:', b.dataset.val);
   });
-
   btn.classList.add('active');
-  console.log('active sekarang:', btn.classList.contains('active'));
-
   const input = document.getElementById('q_' + qid);
   if (input) input.value = btn.dataset.val;
-  console.log('hidden input value:', input?.value);
 }
 
 /* ── Render pertanyaan ──────────────────────────────────── */

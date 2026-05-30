@@ -7,19 +7,19 @@
   <link rel="stylesheet" href="css/style.css"/>
   <style>
     /* ── Scale Button ── */
-  .scale-btn {
+/* ── Scale Button ── */
+.scale-btn {
   width: 2.6rem; height: 2.6rem;
   display: inline-flex; align-items: center; justify-content: center;
-  border: 2px solid var(--border); border-radius: 50%;
+  border: 2px solid #d1d5db; border-radius: 50%;
   font-weight: 700; font-size: 0.9rem; cursor: pointer;
   transition: background .15s, border-color .15s, color .15s;
-  color: var(--text-2);
+  color: #6b7280;            /* ← literal, bukan var() */
   user-select: none; flex-shrink: 0;
   -webkit-tap-highlight-color: transparent;
-  background: transparent;
+  /* HAPUS: background: transparent; ← ini yang jadi masalah */
 }
 
-/* Hover HANYA untuk mouse (bukan touch) */
 @media (hover: hover) and (pointer: fine) {
   .scale-btn:not(.active):hover {
     border-color: var(--primary);
@@ -28,7 +28,6 @@
   }
 }
 
-/* Active selalu biru, tidak bisa di-override apapun */
 .scale-btn.active {
   background: var(--primary) !important;
   border-color: var(--primary) !important;
