@@ -60,8 +60,13 @@ const fbDB = {
 /* ── Scale selector ─────────────────────────────────────── */
 function selectScale(btn) {
   const qid = btn.dataset.qid;
-  document.querySelectorAll(`.scale-btn[data-qid="${qid}"]`).forEach(b => b.classList.remove('active'));
+  // Hapus active dari semua tombol skala untuk pertanyaan ini
+  document.querySelectorAll(`.scale-btn[data-qid="${qid}"]`).forEach(b => {
+    b.classList.remove('active');
+  });
+  // Set active ke tombol yang diklik — akan tetap biru karena .active pakai !important
   btn.classList.add('active');
+  // Simpan nilai ke hidden input
   const input = document.getElementById('q_' + qid);
   if (input) input.value = btn.dataset.val;
 }
@@ -88,6 +93,7 @@ function renderQuestions(questions) {
     let inputHtml = '';
 
     switch (q.type) {
+
       case 'short_text':
         inputHtml = `<input class="form-input" id="q_${q.id}" placeholder="Jawaban kamu..."/>`;
         break;
@@ -99,16 +105,29 @@ function renderQuestions(questions) {
         break;
 
       case 'scale': {
-        const min = q.scale_min ?? 1;
-        const max = q.scale_max ?? 5;
+        const min  = q.scale_min ?? 1;
+        const max  = q.scale_max ?? 5;
         const nums = [];
         for (let n = min; n <= max; n++) nums.push(n);
+        const count = max - min + 1;
+
+        // Lebih dari 7 angka → wrap; sisanya scroll horizontal di mobile
+        const wrapStyle = count > 7
+          ? 'flex-wrap:wrap;'
+          : 'flex-wrap:nowrap;overflow-x:auto;-webkit-overflow-scrolling:touch;';
+
         inputHtml = `
           <input type="hidden" id="q_${q.id}" value="">
-          <div style="display:flex;gap:0.5rem;flex-wrap:wrap;align-items:center;margin-top:0.5rem">
-            ${q.scale_label_min ? `<span style="font-size:0.75rem;color:var(--text-3)">${q.scale_label_min}</span>` : ''}
-            ${nums.map(n => `<div class="scale-btn" data-qid="${q.id}" data-val="${n}" onclick="selectScale(this)">${n}</div>`).join('')}
-            ${q.scale_label_max ? `<span style="font-size:0.75rem;color:var(--text-3)">${q.scale_label_max}</span>` : ''}
+          <div style="display:flex;gap:0.4rem;align-items:center;margin-top:0.5rem;${wrapStyle}padding-bottom:2px;">
+            ${q.scale_label_min
+              ? `<span style="font-size:0.72rem;color:var(--text-3);white-space:nowrap;flex-shrink:0">${q.scale_label_min}</span>`
+              : ''}
+            ${nums.map(n =>
+              `<div class="scale-btn" data-qid="${q.id}" data-val="${n}" onclick="selectScale(this)">${n}</div>`
+            ).join('')}
+            ${q.scale_label_max
+              ? `<span style="font-size:0.72rem;color:var(--text-3);white-space:nowrap;flex-shrink:0">${q.scale_label_max}</span>`
+              : ''}
           </div>`;
         break;
       }
@@ -117,7 +136,8 @@ function renderQuestions(questions) {
         const opts = Array.isArray(q.options) ? q.options : [];
         inputHtml = opts.map(opt => `
           <label style="display:flex;align-items:center;gap:0.6rem;padding:0.45rem 0;cursor:pointer">
-            <input type="radio" name="q_${q.id}" value="${opt}" style="accent-color:var(--primary);width:16px;height:16px">
+            <input type="radio" name="q_${q.id}" value="${opt}"
+              style="accent-color:var(--primary);width:16px;height:16px;flex-shrink:0">
             <span>${opt}</span>
           </label>`).join('');
         break;
@@ -127,7 +147,8 @@ function renderQuestions(questions) {
         const opts = Array.isArray(q.options) ? q.options : [];
         inputHtml = opts.map(opt => `
           <label style="display:flex;align-items:center;gap:0.6rem;padding:0.45rem 0;cursor:pointer">
-            <input type="checkbox" name="q_${q.id}" value="${opt}" style="accent-color:var(--primary);width:16px;height:16px">
+            <input type="checkbox" name="q_${q.id}" value="${opt}"
+              style="accent-color:var(--primary);width:16px;height:16px;flex-shrink:0">
             <span>${opt}</span>
           </label>`).join('');
         break;
@@ -149,7 +170,7 @@ function renderQuestions(questions) {
            data-qid="${q.id}" data-type="${q.type}" data-required="${q.required}">
         <div style="display:flex;gap:0.5rem;align-items:flex-start;margin-bottom:0.75rem">
           <span style="font-weight:700;color:var(--primary);min-width:1.5rem">${i + 1}.</span>
-          <div style="flex:1">
+          <div style="flex:1;min-width:0">
             <span style="font-weight:600;line-height:1.5">${q.question_text}</span>
             <span style="margin-left:0.3rem">${req}</span>
           </div>
@@ -162,7 +183,9 @@ function renderQuestions(questions) {
   document.querySelectorAll('.fade-in').forEach(el => {
     if (!('IntersectionObserver' in window)) { el.classList.add('visible'); return; }
     const obs = new IntersectionObserver(entries => {
-      entries.forEach(e => { if (e.isIntersecting) { e.target.classList.add('visible'); obs.unobserve(e.target); } });
+      entries.forEach(e => {
+        if (e.isIntersecting) { e.target.classList.add('visible'); obs.unobserve(e.target); }
+      });
     }, { threshold: 0.1 });
     obs.observe(el);
   });
@@ -170,7 +193,7 @@ function renderQuestions(questions) {
 
 /* ── Validasi & kumpulkan jawaban ───────────────────────── */
 function collectAndValidate() {
-  const cards = [...document.querySelectorAll('[data-qid]')];
+  const cards   = [...document.querySelectorAll('[data-qid]')];
   const answers = [];
 
   for (const card of cards) {
@@ -180,7 +203,10 @@ function collectAndValidate() {
     let value = '';
 
     switch (type) {
-      case 'short_text': case 'long_text': case 'dropdown': case 'scale':
+      case 'short_text':
+      case 'long_text':
+      case 'dropdown':
+      case 'scale':
         value = (document.getElementById('q_' + qid)?.value || '').trim();
         break;
       case 'multiple_choice':
@@ -200,10 +226,10 @@ function collectAndValidate() {
 
 /* ── Submit feedback ────────────────────────────────────── */
 async function submitFeedback() {
-  const name  = (document.getElementById('fbName')?.value  || '').trim();
-  const email = (document.getElementById('fbEmail')?.value || '').trim();
-  const btn   = document.getElementById('fbSubmitBtn');
-  const errEl = document.getElementById('fbError');
+  const name   = (document.getElementById('fbName')?.value  || '').trim();
+  const email  = (document.getElementById('fbEmail')?.value || '').trim();
+  const btn    = document.getElementById('fbSubmitBtn');
+  const errEl  = document.getElementById('fbError');
   const errMsg = document.getElementById('fbErrorMsg');
 
   errEl?.classList.remove('show');
@@ -244,6 +270,7 @@ async function submitFeedback() {
 
 /* ── Init ───────────────────────────────────────────────── */
 document.addEventListener('DOMContentLoaded', async () => {
+
   // Navbar toggle
   const toggle = document.getElementById('navToggle');
   const menu   = document.getElementById('navMenu');
@@ -253,7 +280,8 @@ document.addEventListener('DOMContentLoaded', async () => {
       toggle.textContent = open ? '✕' : '☰';
     });
     menu.querySelectorAll('a').forEach(a => a.addEventListener('click', () => {
-      menu.classList.remove('open'); toggle.textContent = '☰';
+      menu.classList.remove('open');
+      toggle.textContent = '☰';
     }));
   }
 
@@ -264,7 +292,7 @@ document.addEventListener('DOMContentLoaded', async () => {
     return;
   }
 
-  // Load pertanyaan
+  // Load pertanyaan dari Supabase
   try {
     const questions = await fbDB.getQuestions();
     renderQuestions(questions);
