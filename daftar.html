@@ -29,7 +29,7 @@
 <section class="page-hero">
   <div class="container">
     <div class="label">Webinar Online — Gratis!</div>
-    <h1 id="heroJudul">Break the Loop</h1>
+    <h1 id="heroJudul">Break The Cycle</h1>
     <p style="max-width:580px" id="heroDeskripsi">Webinar interaktif 60 menit dan Gratis.</p>
     <div style="display:flex;gap:0.75rem;margin-top:1.25rem;flex-wrap:wrap">
       <span class="tag tag-success">✅ Gratis</span>
@@ -64,21 +64,56 @@
           <div class="gmeet-status" id="gmeetStatus"></div>
         </div>
 
-                <!-- FEEDBACK LINK — aktif 1 jam setelah webinar mulai -->
-        <div id="feedbackOpen" style="display:none;margin-top:1rem">
-          <div style="height:1px;background:var(--border);margin-bottom:1rem"></div>
-          <a href="feedback.html" class="btn btn-primary"
-            style="width:100%;justify-content:center;background:#16a34a;border-color:#16a34a;text-decoration:none">
-            📝 Isi Feedback Webinar
-          </a>
-          <p style="font-size:0.75rem;color:var(--text-3);text-align:center;margin-top:0.5rem">
-            Bantu kami meningkatkan webinar dengan feedback kamu!
-          </p>
-        </div>
-        <div id="feedbackSoon" style="display:none;margin-top:1rem">
-          <div style="height:1px;background:var(--border);margin-bottom:1rem"></div>
-          <div style="text-align:center;font-size:0.8rem;color:var(--text-3)">
-            📝 Form feedback tersedia setelah webinar selesai (20.00 WIB)
+
+        <!-- FEEDBACK BUTTON — tampil di bawah detail acara -->
+        <div id="feedbackSection" style="margin-top:1.25rem">
+
+          <!-- Belum waktunya sama sekali -->
+          <div id="feedbackHidden" style="display:none"></div>
+
+          <!-- Webinar sudah mulai tapi belum 60 menit -->
+          <div id="feedbackSoon" style="display:none">
+            <div style="
+              background:var(--bg-2,#f8fafc);
+              border:1px solid var(--border);
+              border-radius:12px;
+              padding:1rem 1.25rem;
+              text-align:center;
+              color:var(--text-3);
+              font-size:0.82rem;
+              line-height:1.5
+            ">
+              📝 <strong>Form feedback</strong> tersedia setelah webinar selesai
+              <br><span style="font-size:0.75rem">(pukul 20.00 WIB)</span>
+            </div>
+          </div>
+
+          <!-- Sudah 60 menit → button aktif -->
+          <div id="feedbackOpen" style="display:none">
+            <a href="feedback.html" style="
+              display:flex;
+              align-items:center;
+              justify-content:center;
+              gap:0.5rem;
+              width:100%;
+              padding:0.8rem 1rem;
+              background:#16a34a;
+              color:#fff;
+              border:none;
+              border-radius:10px;
+              font-size:0.95rem;
+              font-weight:600;
+              text-decoration:none;
+              cursor:pointer;
+              box-sizing:border-box;
+              transition:background 0.2s
+            " onmouseover="this.style.background='#15803d'"
+              onmouseout="this.style.background='#16a34a'">
+              📝 Isi Feedback Webinar
+            </a>
+            <p style="font-size:0.75rem;color:var(--text-3);text-align:center;margin-top:0.5rem">
+              Bantu kami meningkatkan webinar dengan feedback kamu!
+            </p>
           </div>
         </div>
 
@@ -106,7 +141,7 @@
             <div class="event-icon">📅</div>
             <div>
               <div class="e-label">Tanggal</div>
-              <div class="e-val">Sabtu, 01 Juni 2026</div>
+              <div class="e-val">Senin, 01 Juni 2026</div>
             </div>
           </div>
 

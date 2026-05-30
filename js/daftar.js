@@ -12,8 +12,8 @@ const EVENT_CONFIG = {
   gmeetLink    : 'https://meet.google.com/zdd-xoiv-zcp',
   batasDaftar  : new Date('2026-05-31T23:59:00'),
   kuota        : 50,
-  judul        : 'Break the Loop: Cegah Kecanduan dalam Permainan Online',
-  deskripsi    : 'Webinar edukasi yang membahas tentang bahaya gaming addiction, cara mengenali tanda-tandanya, dan strategi gaming yang sehat berbasis pendekatan psikologi digital.',
+  judul        : 'Break The Cycle of Addiction with Smart Gaming Habits',
+  deskripsi    : 'Webinar edukasi yang membahas tentang bahaya gaming addiction, cara mengenali tanda-tandanya, dan strategi gaming yang sehat berbasis pendekatan psikologi.',
   pic          : 'Marcellino Natanael - Mahasiswa SI, Universitas Bunda Mulia',
   jenisKegiatan: 'Webinar Online Gratis',
   durasi       : '60 Menit',
@@ -477,23 +477,35 @@ function toggleFaq(el) {
 }
 
 function updateFeedbackLink() {
-  const open = document.getElementById('feedbackOpen');
-  const soon = document.getElementById('feedbackSoon');
+  const open   = document.getElementById('feedbackOpen');
+  const soon   = document.getElementById('feedbackSoon');
   if (!open || !soon) return;
 
-  const now            = new Date();
-  const feedbackBuka   = new Date(EVENT_CONFIG.tanggal.getTime() + 60 * 60 * 1000); // +1 jam
-  const webinarMulai   = now >= EVENT_CONFIG.tanggal;
+  const now          = new Date();
+  const feedbackBuka = new Date(EVENT_CONFIG.tanggal.getTime() + 60 * 60 * 1000);
+  const webinarMulai = now >= EVENT_CONFIG.tanggal;
+
+  // Selalu tampilkan feedbackOpen
+  open.style.display = 'block';
+  soon.style.display = 'none';
+
+  const link = open.querySelector('a');
+  if (!link) return;
 
   if (now >= feedbackBuka) {
-    open.style.display = 'block';
-    soon.style.display = 'none';
-  } else if (webinarMulai) {
-    open.style.display = 'none';
-    soon.style.display = 'block';
+    // ✅ Aktif — hijau, bisa diklik
+    link.style.background      = '#16a34a';
+    link.style.pointerEvents   = 'auto';
+    link.style.opacity         = '1';
+    link.style.cursor          = 'pointer';
+    link.removeAttribute('aria-disabled');
   } else {
-    open.style.display = 'none';
-    soon.style.display = 'none';
+    // 🔒 Disabled — abu-abu, tidak bisa diklik
+    link.style.background      = '#9ca3af';
+    link.style.pointerEvents   = 'none';
+    link.style.opacity         = '0.7';
+    link.style.cursor          = 'not-allowed';
+    link.setAttribute('aria-disabled', 'true');
   }
 }
 
