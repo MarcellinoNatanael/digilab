@@ -5,34 +5,36 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
   <title>DigiLab — Feedback Webinar</title>
   <link rel="stylesheet" href="css/style.css"/>
-  <style>
+<style>
+    :root {
+      --primary: #2563eb;
+    }
+
     /* ── Scale Button ── */
-/* ── Scale Button ── */
-.scale-btn {
-  width: 2.6rem; height: 2.6rem;
-  display: inline-flex; align-items: center; justify-content: center;
-  border: 2px solid #d1d5db; border-radius: 50%;
-  font-weight: 700; font-size: 0.9rem; cursor: pointer;
-  transition: background .15s, border-color .15s, color .15s;
-  color: #6b7280;            /* ← literal, bukan var() */
-  user-select: none; flex-shrink: 0;
-  -webkit-tap-highlight-color: transparent;
-  /* HAPUS: background: transparent; ← ini yang jadi masalah */
-}
+    .scale-btn {
+      width: 2.6rem; height: 2.6rem;
+      display: inline-flex; align-items: center; justify-content: center;
+      border: 2px solid #d1d5db; border-radius: 50%;
+      font-weight: 700; font-size: 0.9rem; cursor: pointer;
+      transition: background .15s, border-color .15s, color .15s;
+      color: #374151;
+      user-select: none; flex-shrink: 0;
+      -webkit-tap-highlight-color: transparent;
+    }
 
-@media (hover: hover) and (pointer: fine) {
-  .scale-btn:not(.active):hover {
-    border-color: var(--primary);
-    background: var(--primary);
-    color: #fff;
-  }
-}
+    @media (hover: hover) and (pointer: fine) {
+      .scale-btn:not(.active):hover {
+        border-color: #2563eb;
+        background: #2563eb;
+        color: #fff;
+      }
+    }
 
-.scale-btn.active {
-  background: var(--primary) !important;
-  border-color: var(--primary) !important;
-  color: #fff !important;
-}
+    .scale-btn.active {
+      background: #2563eb !important;
+      border-color: #2563eb !important;
+      color: #fff !important;
+    }
 
     /* ── State Box ── */
     .fb-state-box {
