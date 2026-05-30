@@ -7,29 +7,33 @@
   <link rel="stylesheet" href="css/style.css"/>
   <style>
     /* ── Scale Button ── */
-    .scale-btn {
-      width: 2.6rem; height: 2.6rem;
-      display: inline-flex; align-items: center; justify-content: center;
-      border: 2px solid var(--border); border-radius: 50%;
-      font-weight: 700; font-size: 0.9rem; cursor: pointer;
-      transition: background .15s, border-color .15s, color .15s;
-      color: var(--text-2);
-      user-select: none; flex-shrink: 0;
-      -webkit-tap-highlight-color: transparent;
-      background: transparent;
-    }
-    /* Hover: biru + teks putih (tanpa mengganggu .active) */
-    .scale-btn:not(.active):hover {
-      border-color: var(--primary);
-      background: var(--primary);
-      color: #fff;
-    }
-    /* Active: tetap biru + teks putih, tidak hilang */
-    .scale-btn.active {
-      background: var(--primary) !important;
-      border-color: var(--primary) !important;
-      color: #fff !important;
-    }
+  .scale-btn {
+  width: 2.6rem; height: 2.6rem;
+  display: inline-flex; align-items: center; justify-content: center;
+  border: 2px solid var(--border); border-radius: 50%;
+  font-weight: 700; font-size: 0.9rem; cursor: pointer;
+  transition: background .15s, border-color .15s, color .15s;
+  color: var(--text-2);
+  user-select: none; flex-shrink: 0;
+  -webkit-tap-highlight-color: transparent;
+  background: transparent;
+}
+
+/* Hover HANYA untuk mouse (bukan touch) */
+@media (hover: hover) and (pointer: fine) {
+  .scale-btn:not(.active):hover {
+    border-color: var(--primary);
+    background: var(--primary);
+    color: #fff;
+  }
+}
+
+/* Active selalu biru, tidak bisa di-override apapun */
+.scale-btn.active {
+  background: var(--primary) !important;
+  border-color: var(--primary) !important;
+  color: #fff !important;
+}
 
     /* ── State Box ── */
     .fb-state-box {
