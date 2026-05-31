@@ -8,9 +8,9 @@
    ⚙️  KONFIGURASI — EDIT BAGIAN INI
    ══════════════════════════════════════════════════════ */
 const EVENT_CONFIG = {
-  tanggal      : new Date('2026-06-01T19:00:00'),
+  tanggal     : new Date('2026-06-01T19:00:00+07:00'),
   gmeetLink    : 'https://meet.google.com/zdd-xoiv-zcp',
-  batasDaftar  : new Date('2026-06-01T11:59:00'),
+  batasDaftar : new Date('2026-06-01T11:59:00+07:00'),
   kuota        : 50,
   judul        : 'Break The Cycle of Addiction with Smart Gaming Habits',
   deskripsi    : 'Webinar edukasi yang membahas tentang bahaya gaming addiction, cara mengenali tanda-tandanya, dan strategi gaming yang sehat berbasis pendekatan psikologi.',
